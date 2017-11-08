@@ -10,28 +10,25 @@ First, create an IoT Hub on the Azure portal. Once you have the IoT Hub, get its
 
 Second, choose a name for your device and enter it as the "deviceId" settings.json.
 
-'''
+```
 {
   "connectionString": "HostName=<your IoT Hub>.azure-devices.net;SharedAccessKeyName=iothubowner .....",
   "deviceId": "<your device id>",
   "deviceKey": "",
   "iotHubUri": "<your IoT Hub>.azure-devices.net"
 }
-
-'''
-
+```
 Then run *CreateDeviceIdentity* on the console. Exactly as in the __Getting Started__ documentation, you will receive your device key. Copy it and paste the key as "deviceKey" into the settings.json file. 
 
 Your settings.json file should now be complete
-'''
+```
 {
   "connectionString": "HostName=<your IoT Hub>.azure-devices.net;SharedAccessKeyName=iothubowner .....",
   "deviceId": "<your device id>",
   "deviceKey": "<your device key>",
   "iotHubUri": "<your IoT Hub>.azure-devices.net"
 }
-
-'''
+```
 
 ## Run the programs
 
@@ -43,7 +40,7 @@ You can run the *SimulatedDevice* program, followed by the *ReadDeviceToCloudMes
 
 Founded on [Connect your device to your IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-csharp-csharp-getstarted)
 
-* **Sherryl Manalo** - [particlehub.net](www.particlehub.net)
+* **Sherryl Manalo** - [particlehub.net](http://www.particlehub.net)
 
 ## License
 
