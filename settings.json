@@ -1,0 +1,6 @@
+{
+  "connectionString": "HostName=<your IoT Hub>.azure-devices.net;SharedAccessKeyName=iothubowner .....",
+  "deviceId": "<your device id>",
+  "deviceKey": "<your device key>",
+  "iotHubUri": "<your IoT Hub>.azure-devices.net"
+}
