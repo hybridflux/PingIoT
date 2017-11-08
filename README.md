@@ -18,7 +18,7 @@ Second, choose a name for your device and enter it as the "deviceId" settings.js
   "iotHubUri": "<your IoT Hub>.azure-devices.net"
 }
 ```
-Then run *CreateDeviceIdentity* on the console. Exactly as in the __Getting Started__ documentation, you will receive your device key. Copy it and paste the key as "deviceKey" into the settings.json file. 
+Then run *CreateDeviceIdentity* on the console. Exactly as in the [documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-csharp-csharp-getstarted#create-a-device-identity), you will receive your device key. Copy it and paste the key as "deviceKey" into the settings.json file. 
 
 Your settings.json file should now be complete
 ```
