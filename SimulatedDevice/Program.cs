@@ -20,18 +20,7 @@ namespace SimulatedDevice
     {
         static DeviceClient deviceClient;
 
-        // Read settings.json and use parameters
-        static string filePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-        static string _filePath = Directory.GetParent(Directory.GetParent(Directory.GetParent(filePath).FullName).FullName).FullName + "\\settings.json";
-        static string jsonText = File.ReadAllText(_filePath);
-
-        static Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
-        static string iotHubUri = IoTHubsettings.iotHubUri;
-        static string deviceId = IoTHubsettings.deviceId;
-        static string deviceKey = IoTHubsettings.deviceKey;
-
-
-    private static async void SendDeviceToCloudMessagesAsync()
+    private static async void SendDeviceToCloudMessagesAsync(string deviceId)
         {
             // Send arbitrary data to IoT Hub and include timestamp
             double minTemperature = 20;
@@ -43,7 +32,7 @@ namespace SimulatedDevice
             {
                 double currentTemperature = minTemperature + rand.NextDouble() * 15;
                 double currentHumidity = minHumidity + rand.NextDouble() * 20;
-                DateTime currentDateTime = DateTime.Now;
+                DateTime currentDateTime = DateTime.UtcNow;
 
                 var telemetryDataPoint = new
                 {
@@ -59,7 +48,7 @@ namespace SimulatedDevice
                 message.Properties.Add("temperatureAlert", (currentTemperature > 30) ? "true" : "false");
 
                 await deviceClient.SendEventAsync(message);
-                Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
+                Console.WriteLine("{0} > Sending message: {1}", DateTime.UtcNow, messageString);
 
                 await Task.Delay(1000);
             }
@@ -69,14 +58,42 @@ namespace SimulatedDevice
 
         static void Main(string[] args)
         {
-         
 
-                Console.WriteLine("Simulated device\n");
-                deviceClient = DeviceClient.Create(iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey), TransportType.Mqtt);
+            string jsonText = "";
+            if (args.Length == 1)
+            {
+                try
+                {
+                    jsonText = File.ReadAllText(args[0]);
+                    Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
+                    string iotHubUri = IoTHubsettings.iotHubUri;
+                    string deviceId = IoTHubsettings.deviceId;
+                    string deviceKey = IoTHubsettings.deviceKey;
+                    string connectionString = IoTHubsettings.connectionString;
 
-                SendDeviceToCloudMessagesAsync();
-                Console.ReadLine();
-          
+                    Console.WriteLine("Simulated device\n");
+                    deviceClient = DeviceClient.Create(iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey), TransportType.Amqp_WebSocket_Only);
+
+                    SendDeviceToCloudMessagesAsync(deviceId);
+                    Console.ReadLine();
+
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("An error occurred: '{0}'", e);
+                }
+
+            }
+            /*
+            string filePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string _filePath = Directory.GetParent(Directory.GetParent(Directory.GetParent(filePath).FullName).FullName).FullName + "\\settings.json";
+            */
+            else
+            {
+                Console.WriteLine("Usage: SimulatedDevice <path to json configuration file>");
+            }
+
 
         
         }

@@ -20,15 +20,7 @@ namespace ReadDeviceToCloudMessages
     }
     class Program
     {
-        // Read settings.json and use parameters
-        static string filePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-        static string _filePath = Directory.GetParent(Directory.GetParent(Directory.GetParent(filePath).FullName).FullName).FullName + "\\settings.json";
-        static string jsonText = File.ReadAllText(_filePath);
-
-        static Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
-        static string iotHubUri = IoTHubsettings.iotHubUri;
-
-        static string connectionString = IoTHubsettings.connectionString; 
+   
         static string iotHubD2cEndpoint = "messages/events";
         static EventHubClient eventHubClient;
 
@@ -46,7 +38,7 @@ namespace ReadDeviceToCloudMessages
 
           
                 string data = Encoding.UTF8.GetString(eventData.GetBytes());
-                Console.WriteLine("Message received. DateTime: {0} Partition: {1} Data: '{2}'", DateTime.Now , partition, data);
+                Console.WriteLine("Message received. DateTime: {0} Partition: {1} Data: '{2}'", DateTime.UtcNow , partition, data);
 
                 dynamic MyData = JsonConvert.DeserializeObject(data);
 
@@ -56,7 +48,7 @@ namespace ReadDeviceToCloudMessages
                 float temperature = MyData.temperature;
 
                 //calculate time difference from sent to received and write to console
-                TimeSpan timedifference = DateTime.Now - datetime;
+                TimeSpan timedifference = DateTime.UtcNow - datetime;
                 double timespan = timedifference.Milliseconds;
                 Console.WriteLine("Datetime difference (ms): {0}", timespan);
 
@@ -81,31 +73,56 @@ namespace ReadDeviceToCloudMessages
 
         public static void Log(string logMessage, TextWriter w)
         {
-            w.WriteLine("{0},{1}", DateTime.Now.ToLongTimeString(), logMessage);
+            w.WriteLine("{0},{1}", DateTime.UtcNow.ToLongTimeString(), logMessage);
         }
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Receive messages. Ctrl-C to exit.\n");
-            eventHubClient = EventHubClient.CreateFromConnectionString(connectionString, iotHubD2cEndpoint);
-
-            var d2cPartitions = eventHubClient.GetRuntimeInformation().PartitionIds;
-
-            CancellationTokenSource cts = new CancellationTokenSource();
-
-            System.Console.CancelKeyPress += (s, e) =>
+            string jsonText = "";
+            if (args.Length == 1)
             {
-                e.Cancel = true;
-                cts.Cancel();
-                Console.WriteLine("Exiting...");
-            };
+                try
+                {
+                    jsonText = File.ReadAllText(args[0]);
+                    Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
+                    string iotHubUri = IoTHubsettings.iotHubUri;
+                    string deviceId = IoTHubsettings.deviceId;
 
-            var tasks = new List<Task>();
-            foreach (string partition in d2cPartitions)
-            {
-                tasks.Add(ReceiveMessagesFromDeviceAsync(partition, cts.Token));
+                    string connectionString = IoTHubsettings.connectionString;
+
+                    Console.WriteLine("Receive messages. Ctrl-C to exit.\n");
+                    eventHubClient = EventHubClient.CreateFromConnectionString(connectionString, iotHubD2cEndpoint);
+
+                    var d2cPartitions = eventHubClient.GetRuntimeInformation().PartitionIds;
+
+                    CancellationTokenSource cts = new CancellationTokenSource();
+
+                    System.Console.CancelKeyPress += (s, e) =>
+                    {
+                        e.Cancel = true;
+                        cts.Cancel();
+                        Console.WriteLine("Exiting...");
+                    };
+
+                    var tasks = new List<Task>();
+                    foreach (string partition in d2cPartitions)
+                    {
+                        tasks.Add(ReceiveMessagesFromDeviceAsync(partition, cts.Token));
+                    }
+                    Task.WaitAll(tasks.ToArray());
+
+                    }
+                catch (Exception e)
+                {
+                    Console.WriteLine("An error occurred: '{0}'", e);
+                }
+
             }
-            Task.WaitAll(tasks.ToArray());
+            
+            else
+            {
+                Console.WriteLine("Usage: ReadDeviceToCloudMessages <path to json configuration file>");
+            }
         }
     }
 }

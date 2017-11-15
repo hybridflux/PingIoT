@@ -19,17 +19,8 @@ namespace CreateDeviceIdentity
     {
         static RegistryManager registryManager;
 
-        static string filePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-        static string _filePath = Directory.GetParent(Directory.GetParent(Directory.GetParent(filePath).FullName).FullName).FullName + "\\settings.json";
-        static string jsonText = File.ReadAllText(_filePath);
-
-        static Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
-        static string iotHubUri = IoTHubsettings.iotHubUri;
-        static string deviceId = IoTHubsettings.deviceId;
-
-        static string connectionString = IoTHubsettings.connectionString;
         
-        private static async Task AddDeviceAsync()
+        private static async Task AddDeviceAsync(string deviceId)
         {
             Device device;
             try
@@ -45,9 +36,36 @@ namespace CreateDeviceIdentity
 
         static void Main(string[] args)
         {
-            registryManager = RegistryManager.CreateFromConnectionString(connectionString);
-            AddDeviceAsync().Wait();
-            Console.ReadLine();
+            string jsonText = "";
+            if (args.Length == 1)
+            {
+                try
+                {
+                    jsonText = File.ReadAllText(args[0]);
+                    Settings IoTHubsettings = JsonConvert.DeserializeObject<Settings>(jsonText);
+                    string iotHubUri = IoTHubsettings.iotHubUri;
+                    string deviceId = IoTHubsettings.deviceId;
+
+                    string connectionString = IoTHubsettings.connectionString;
+                    registryManager = RegistryManager.CreateFromConnectionString(connectionString);
+                    AddDeviceAsync(deviceId).Wait();
+                    Console.ReadLine();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("An error occurred: '{0}'", e);
+                }
+
+            }
+            /*
+            string filePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string _filePath = Directory.GetParent(Directory.GetParent(Directory.GetParent(filePath).FullName).FullName).FullName + "\\settings.json";
+            */
+            else {
+                Console.WriteLine("Usage: CreateDeviceIdentity <path to json configuration file>");
+            }
+
+       
         }
     }
 }
